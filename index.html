@@ -40,13 +40,6 @@
             background-color: #e6c200; /* Slightly darker gold on hover */
             transform: translateY(-2px);
         }
-        .btn-primary:disabled {
-            background-color: #555555;
-            color: #aaaaaa;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
         .input-field {
             border: 1px solid #555555; /* Darker gray border */
             background-color: #333333; /* Darker background for inputs */
@@ -202,7 +195,7 @@
 
         <!-- User ID Display -->
         <div class="card flex flex-col sm:flex-row justify-between items-center bg-gray-800 border border-gray-700 p-5 mb-8">
-            <p class="text-gray-300 text-base font-medium mb-2 sm:mb-0">Welcome, <span id="userIdDisplay" class="font-bold text-gold-400">Loading...</span></p>
+            <p class="text-gray-300 text-base font-medium mb-2 sm:mb-0">Welcome, <span id="userIdDisplay" class="font-bold text-gold-400">Mico Jay Fernandez</span></p>
             <div id="authStatus" class="text-gray-300 text-base font-medium">Authenticating...</div>
         </div>
 
@@ -324,7 +317,7 @@
                                 <th class="table-header py-2 px-4 sticky top-0">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="earningsTableBody" class="bg-gray-800 divide-y divide-gray-700">
+                        <tbody id="earningsTableBody" class="bg-gray-800 divide-y divide-700">
                             <!-- Earnings rows will be dynamically inserted here -->
                         </tbody>
                     </table>
@@ -348,19 +341,21 @@
     <div id="messageBox" class="message-box"></div>
 
     <script type="module">
-        // Firebase imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-
         // =======================================================================================================
-        // 🔥🔥🔥 MASTER: YOUR FIREBASE CONFIGURATION IS NOW DIRECTLY EMBEDDED HERE 🔥🔥🔥
+        // MASTER: YOUR FIREBASE CONFIGURATION IS NOW DIRECTLY EMBEDDED HERE 🔥🔥🔥
         // This configuration comes from your Firebase project: "MY VA Client Manager".
         // It should fix the "Authentication Failed" error.
         // =======================================================================================================
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const firebaseConfig = {
+          apiKey: "AIzaSyB3qFzrNbylrPvdMzJVahvZ0uVYxsafmRI",
+          authDomain: "my-va-client-manager.firebaseapp.com",
+          projectId: "my-va-client-manager",
+          storageBucket: "my-va-client-manager.firebasestorage.app",
+          messagingSenderId: "1021812323767",
+          appId: "1:1021812323767:web:a7ca4cf557550902fae432",
+          measurementId: "G-HJ99XHT1MM"
+        };
+        const appId = firebaseConfig.appId; // Use your project's appId from the config
         // =======================================================================================================
         // END OF FIREBASE CONFIGURATION SECTION
         // =======================================================================================================
@@ -372,6 +367,11 @@
         let currentUserId = null;
         let authReady = false;
         let earningsChartInstance = null; // To store the Chart.js instance
+
+        // Declare Firebase functions globally after they are dynamically imported
+        let initializeApp, getAuth, signInAnonymously, onAuthStateChanged;
+        let getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc;
+
 
         const clientForm = document.getElementById('clientForm');
         const clientTableBody = document.getElementById('clientTableBody');
@@ -428,6 +428,11 @@
          */
         async function initializeFirebase() {
             try {
+                // Dynamically import Firebase modules and assign to global variables
+                ({ initializeApp } = await import("https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js"));
+                ({ getAuth, signInAnonymously, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js"));
+                ({ getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc } = await import("https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js"));
+
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -436,31 +441,19 @@
                 clientListStatus.classList.remove('hidden');
                 earningLogStatus.classList.remove('hidden');
 
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUserId = user.uid;
-                        // Display the user's ID
-                        userIdDisplay.textContent = currentUserId;
+                        // Display the user's name directly
+                        userIdDisplay.textContent = "Mico Jay Fernandez";
                         authStatus.textContent = 'Authenticated!';
                         authReady = true;
                         // Fetch and display data once authenticated
                         fetchClients();
                         fetchMonthlyEarnings();
                     } else {
-                        // This block should ideally not be reached after sign-in attempts
-                        authStatus.textContent = 'Not Authenticated';
-                        authReady = false;
-                        clientListStatus.classList.add('hidden');
-                        earningLogStatus.classList.add('hidden');
-                        noClientsMessage.textContent = 'Please wait for authentication to complete or refresh the page.';
-                        noClientsMessage.classList.remove('hidden');
-                        chartNoDataMessage.classList.remove('hidden');
+                        // Sign in anonymously if no user is found
+                        await signInAnonymously(auth);
                     }
                 });
 
@@ -839,7 +832,7 @@
                 '#A9A9A9',      // DarkGray
                 '#D3D3D3',      // LightGray
                 '#F5F5F5',      // WhiteSmoke
-                '#FFFFFF'      // White
+                '#FFFFFF'       // White
             ];
 
 
